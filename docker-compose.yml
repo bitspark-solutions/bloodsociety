@@ -2,7 +2,7 @@ version: '3.9'
 services:
   web:
     build: .
-    container_name: bloodsociety_web
+    container_name: bloodsociety_api
     ports:
       - "5000:80"
     environment:
