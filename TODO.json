@@ -1,0 +1,38 @@
+[
+  {
+    "task": "Test all API endpoints using Swagger or Postman",
+    "details": "Verify CRUD operations, validation, and expected responses for Donor, Review, and Request controllers."
+  },
+  {
+    "task": "Add authentication and authorization",
+    "details": "Restrict sensitive actions to authenticated users and enforce role-based permissions."
+  },
+  {
+    "task": "Improve validation and error handling",
+    "details": "Add comprehensive validation to DTOs and controllers. Return detailed error messages."
+  },
+  {
+    "task": "Enhance API documentation",
+    "details": "Add XML comments to models and controllers for Swagger. Document request/response schemas and error codes."
+  },
+  {
+    "task": "Implement file storage for health certificates",
+    "details": "Integrate with cloud or local storage instead of saving as base64 strings."
+  },
+  {
+    "task": "Add notifications and matching logic",
+    "details": "Implement notifications for request status changes and donor-request matching."
+  },
+  {
+    "task": "Add pagination and sorting to search endpoints",
+    "details": "Support large result sets with efficient queries."
+  },
+  {
+    "task": "Prepare for deployment",
+    "details": "Add production configs, CORS, HTTPS, logging, and deployment scripts."
+  },
+  {
+    "task": "Write unit and integration tests",
+    "details": "Test controllers and business logic."
+  }
+]
