@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // Added this line
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;

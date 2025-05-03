@@ -66,7 +66,7 @@ namespace bloodsociety.Controllers
                 var auth0User = await mgmtApi.Users.CreateAsync(userReq);
 
                 // 2. Create user in local DB
-                var localUser = new User
+                var localUser = new bloodsociety.Models.User
                 {
                     Name = req.Name,
                     Email = req.Email,
