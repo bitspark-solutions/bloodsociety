@@ -17,7 +17,7 @@ builder.Services.AddDbContext<BloodSocietyContext>(options =>
 
 // Configure Redis
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect("redis:6379"));
+    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")));
 
 // Configure Auth0 JWT authentication
 var auth0Domain = builder.Configuration["Auth0:Domain"];
