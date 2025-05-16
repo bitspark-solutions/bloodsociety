@@ -50,8 +50,8 @@ namespace bloodsociety.Controllers
                     u.UserId,
                     u.Name,
                     u.Email,
-                    u.Phone,
                     u.Role,
+                    u.Status,
                     u.CreatedAt
                 }).ToListAsync();
             return Ok(users);
@@ -62,7 +62,14 @@ namespace bloodsociety.Controllers
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound("User not found");
-            user.Role = "Blocked";
+            // Create a new UserBlock entry
+            var userBlock = new bloodsociety.Models.UserBlock {
+                UserId = userId,
+                Reason = "Blocked by admin",
+                BlockedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+            _context.UserBlocks.Add(userBlock);
             await _context.SaveChangesAsync();
             return Ok(new { message = "User blocked" });
         }
@@ -70,11 +77,31 @@ namespace bloodsociety.Controllers
         [HttpPut("users/{userId}/unblock")]
         public async Task<IActionResult> UnblockUser(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found");
-            if (user.Role == "Blocked") user.Role = "Donor"; // Default to Donor, or restore previous role if tracked
+            var userBlock = await _context.UserBlocks.FirstOrDefaultAsync(ub => ub.UserId == userId && ub.IsActive);
+            if (userBlock == null) return NotFound("User is not blocked");
+            userBlock.IsActive = false;
             await _context.SaveChangesAsync();
             return Ok(new { message = "User unblocked" });
+        }
+
+        [HttpPut("users/{userId}/deactivate")]
+        public async Task<IActionResult> DeactivateUser(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found");
+            user.Status = "Inactive";
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User deactivated" });
+        }
+
+        [HttpPut("users/{userId}/activate")]
+        public async Task<IActionResult> ActivateUser(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found");
+            user.Status = "Active";
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User activated" });
         }
 
         [HttpPut("users/{userId}/promote/{role}")]
@@ -95,7 +122,12 @@ namespace bloodsociety.Controllers
             var months = Enumerable.Range(0, 6).Select(i => now.AddMonths(-i)).Reverse().ToList();
             var donorTrends = await Task.WhenAll(months.Select(async m => new {
                 Month = m.ToString("yyyy-MM"),
-                Count = await _context.DonorProfiles.CountAsync(d => d.User.CreatedAt.Year == m.Year && d.User.CreatedAt.Month == m.Month)
+                Count = await _context.DonorProfiles
+                    .Join(_context.Users,
+                        d => d.DonorId,
+                        u => u.UserId,
+                        (d, u) => new { d, u })
+                    .CountAsync(x => x.u.CreatedAt.Year == m.Year && x.u.CreatedAt.Month == m.Month)
             }));
             var requestTrends = await Task.WhenAll(months.Select(async m => new {
                 Month = m.ToString("yyyy-MM"),
@@ -122,10 +154,16 @@ namespace bloodsociety.Controllers
         public async Task<IActionResult> GetBloodTypeStats()
         {
             var donorStats = await _context.DonorProfiles
-                .GroupBy(d => d.BloodType)
-                .Select(g => new { BloodType = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)
-                .ToListAsync();
+                .Join(_context.Users,
+                    d => d.DonorId,
+                    u => u.UserId,
+                    (d, u) => new { d, u })
+                .GroupBy(x => new { x.u.CreatedAt.Year, x.u.CreatedAt.Month })
+                .Select(g => new {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count()
+                }).ToListAsync();
             var requestStats = await _context.BloodRequests
                 .GroupBy(r => r.BloodType)
                 .Select(g => new { BloodType = g.Key, Count = g.Count() })

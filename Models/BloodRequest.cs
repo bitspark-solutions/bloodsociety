@@ -9,6 +9,5 @@ namespace bloodsociety.Models
         public string Visibility { get; set; } // Public/Private
         public string Status { get; set; } // Open, Fulfilled, Cancelled
         public DateTime CreatedAt { get; set; }
-        public User Requester { get; set; }
     }
 }

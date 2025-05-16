@@ -8,7 +8,5 @@ namespace bloodsociety.Models
         public int Rating { get; set; }
         public string Comments { get; set; }
         public DateTime CreatedAt { get; set; }
-        public User Donor { get; set; }
-        public User Receiver { get; set; }
     }
 }

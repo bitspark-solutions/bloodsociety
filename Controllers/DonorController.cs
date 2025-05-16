@@ -60,7 +60,7 @@ namespace bloodsociety.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> SearchDonors([FromQuery] SearchDonorsRequest request)
         {
-            var query = _context.DonorProfiles.Include(d => d.User).AsQueryable();
+            var query = _context.DonorProfiles.AsQueryable();
             if (!string.IsNullOrEmpty(request.BloodType))
                 query = query.Where(d => d.BloodType == request.BloodType);
             if (request.ActiveStatus.HasValue)
@@ -70,15 +70,18 @@ namespace bloodsociety.Controllers
             if (request.LastDonatedBefore.HasValue)
                 query = query.Where(d => d.LastDonationDate <= request.LastDonatedBefore);
             // Location filter can be added if location is modeled
-            var donors = await query.Select(d => new {
-                d.DonorId,
-                d.BloodType,
-                d.ActiveStatus,
-                d.LastDonationDate,
-                d.User.Name,
-                d.User.Email,
-                d.User.Phone
-            }).ToListAsync();
+            var donors = await query.Join(_context.Users,
+                d => d.DonorId,
+                u => u.UserId,
+                (d, u) => new {
+                    d.DonorId,
+                    d.BloodType,
+                    d.ActiveStatus,
+                    d.LastDonationDate,
+                    Name = u.Name,
+                    Email = u.Email,
+                    Phone = u.Phone
+                }).ToListAsync();
             return Ok(donors);
         }
     }

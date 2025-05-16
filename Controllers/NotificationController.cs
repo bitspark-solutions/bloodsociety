@@ -22,13 +22,14 @@ namespace bloodsociety.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> SendNotification([FromBody] string message)
         {
-            var activeDonors = await _context.DonorProfiles.Include(d => d.User).Where(d => d.ActiveStatus).ToListAsync();
+            var activeDonors = await _context.DonorProfiles.Where(d => d.ActiveStatus).ToListAsync();
             foreach (var donor in activeDonors)
             {
+                var user = await _context.Users.FindAsync(donor.DonorId);
                 var payload = new {
                     UserId = donor.DonorId,
-                    Email = donor.User.Email,
-                    Name = donor.User.Name,
+                    Email = user?.Email,
+                    Name = user?.Name,
                     Message = message
                 };
                 var json = System.Text.Json.JsonSerializer.Serialize(payload);

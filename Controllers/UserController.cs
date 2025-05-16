@@ -30,6 +30,8 @@ namespace bloodsociety.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
                 return NotFound("User not found");
+            if (user.Status == "Inactive")
+                return Forbid("User is inactive");
             return Ok(new
             {
                 user.UserId,
@@ -37,7 +39,10 @@ namespace bloodsociety.Controllers
                 user.Email,
                 user.Phone,
                 user.Role,
-                user.CreatedAt
+                user.CreatedAt,
+                user.Status,
+                user.PhoneVerified,
+                user.EmailVerified
             });
         }
 
@@ -50,6 +55,8 @@ namespace bloodsociety.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
                 return NotFound("User not found");
+            if (user.Status == "Inactive")
+                return Forbid("User is inactive");
             user.Name = req.Name ?? user.Name;
             user.Phone = req.Phone ?? user.Phone;
             user.Role = req.Role ?? user.Role;

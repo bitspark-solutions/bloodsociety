@@ -7,6 +7,5 @@ namespace bloodsociety.Models
         public DateTime? LastDonationDate { get; set; }
         public string HealthCertificate { get; set; }
         public string BloodType { get; set; } // A+, O-, etc.
-        public User User { get; set; }
     }
 }

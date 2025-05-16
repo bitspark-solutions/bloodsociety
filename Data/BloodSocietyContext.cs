@@ -8,6 +8,7 @@ namespace bloodsociety.Data
         public BloodSocietyContext(DbContextOptions<BloodSocietyContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<UserBlock> UserBlocks { get; set; }
         public DbSet<DonorProfile> DonorProfiles { get; set; }
         public DbSet<BloodRequest> BloodRequests { get; set; }
         public DbSet<Review> Reviews { get; set; }

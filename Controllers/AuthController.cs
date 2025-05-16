@@ -61,7 +61,7 @@ namespace bloodsociety.Controllers
                     Connection = "Username-Password-Authentication",
                     EmailVerified = false,
                     FullName = req.Name,
-                    UserMetadata = new { phone = req.Phone, role = req.Role }
+                    UserMetadata = new { phone = req.Phone, roles = new[] { req.Role } }
                 };
                 var auth0User = await mgmtApi.Users.CreateAsync(userReq);
 
@@ -72,8 +72,11 @@ namespace bloodsociety.Controllers
                     Email = req.Email,
                     PasswordHash = "Auth0", // Password is managed by Auth0
                     Phone = req.Phone,
-                    Role = req.Role,
-                    CreatedAt = DateTime.UtcNow
+                    Role = req.Role, // TODO: Update User model to support multiple roles if not already
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "Active",
+                    PhoneVerified = false,
+                    EmailVerified = false
                 };
                 _context.Users.Add(localUser);
                 await _context.SaveChangesAsync();
@@ -88,46 +91,46 @@ namespace bloodsociety.Controllers
 
         // POST: api/auth/login
         [HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] LoginRequest req)
-{
-    var domain = _config["Auth0:Domain"];
-    var clientId = _config["Auth0:ClientId"];
-    var audience = _config["Auth0:Audience"];
-
-    var authApi = new AuthenticationApiClient($"https://{domain}");
-    try
-    {
-        // 1. Authenticate with Auth0
-        var tokenResp = await authApi.GetTokenAsync(new ResourceOwnerTokenRequest
+        public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
-            ClientId = clientId,
-            Audience = audience,
-            Scope = "openid profile email offline_access", // Request refresh token
-            Realm = "Username-Password-Authentication",
-            Username = req.Email,
-            Password = req.Password
-        });
+            var domain = _config["Auth0:Domain"];
+            var clientId = _config["Auth0:ClientId"];
+            var audience = _config["Auth0:Audience"];
 
-        // 2. Check if user exists in local DB with matching email and password
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email && u.PasswordHash == req.Password);
-        if (user == null)
-            return Unauthorized(new { error = "User not found or password does not match in local database" });
+            var authApi = new AuthenticationApiClient($"https://{domain}");
+            try
+            {
+                // 1. Authenticate with Auth0
+                var tokenResp = await authApi.GetTokenAsync(new ResourceOwnerTokenRequest
+                {
+                    ClientId = clientId,
+                    Audience = audience,
+                    Scope = "openid profile email offline_access",
+                    Realm = "Username-Password-Authentication",
+                    Username = req.Email,
+                    Password = req.Password
+                });
 
-        return Ok(new
-        {
-            access_token = tokenResp.AccessToken,
-            id_token = tokenResp.IdToken,
-            refresh_token = tokenResp.RefreshToken, // Include refresh token if present
-            expires_in = tokenResp.ExpiresIn,
-            token_type = tokenResp.TokenType,
-            user = new { user.UserId, user.Name, user.Email, user.Role }
-        });
-    }
-    catch (Exception ex)
-    {
-        return Unauthorized(new { error = ex.Message });
-    }
-}
+                // 2. Check if user exists in local DB with matching email
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
+                if (user == null)
+                    return Unauthorized(new { error = "User not found in local database" });
+
+                return Ok(new
+                {
+                    access_token = tokenResp.AccessToken,
+                    id_token = tokenResp.IdToken,
+                    refresh_token = tokenResp.RefreshToken,
+                    expires_in = tokenResp.ExpiresIn,
+                    token_type = tokenResp.TokenType,
+                    user = new { user.UserId, user.Name, user.Email, user.Role }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { error = ex.Message });
+            }
+        }
 
         // POST: api/auth/verify-otp
         [HttpPost("verify-otp")]
