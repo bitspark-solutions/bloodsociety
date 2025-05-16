@@ -73,6 +73,7 @@ namespace bloodsociety.Controllers
                     PasswordHash = "Auth0", // Password is managed by Auth0
                     Phone = req.Phone,
                     Role = req.Role, // TODO: Update User model to support multiple roles if not already
+                    BloodGroupId = req.BloodGroupId,
                     CreatedAt = DateTime.UtcNow,
                     Status = "Active",
                     PhoneVerified = false,

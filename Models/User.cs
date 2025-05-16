@@ -2,6 +2,9 @@ namespace bloodsociety.Models
 {
     public class User
     {
+        public int BloodGroupId { get; set; }
+        [ForeignKey("BloodGroupId")]
+        public BloodGroup BloodGroup { get; set; }
         public int UserId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
